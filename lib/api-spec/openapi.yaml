@@ -1,22 +1,35 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Shake Crazy Food Truck API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: menu
+    description: Menu items
+  - name: discounts
+    description: Festival discounts
+  - name: stopwatch
+    description: Stopwatch game
+  - name: submissions
+    description: User submissions / love sharing
+  - name: location
+    description: Truck location
+  - name: analytics
+    description: Analytics tracking
+  - name: admin
+    description: Admin operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +37,475 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /menu:
+    get:
+      operationId: getMenuItems
+      tags: [menu]
+      summary: Get all menu items
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: available_only
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Menu items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MenuItem"
+
+  /discounts:
+    get:
+      operationId: getActiveDiscounts
+      tags: [discounts]
+      summary: Get active festival discounts
+      responses:
+        "200":
+          description: Active discounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Discount"
+
+  /stopwatch/attempt:
+    post:
+      operationId: submitStopwatchAttempt
+      tags: [stopwatch]
+      summary: Submit a stopwatch attempt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StopwatchAttemptRequest"
+      responses:
+        "200":
+          description: Attempt result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StopwatchAttemptResult"
+
+  /stopwatch/winners:
+    get:
+      operationId: getStopwatchWinners
+      tags: [stopwatch]
+      summary: Get recent stopwatch winners
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of winners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StopwatchWinner"
+
+  /stopwatch/can-play:
+    get:
+      operationId: canPlayStopwatch
+      tags: [stopwatch]
+      summary: Check if user can play today
+      parameters:
+        - name: ip
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Can play status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CanPlayStatus"
+
+  /submissions:
+    get:
+      operationId: getApprovedSubmissions
+      tags: [submissions]
+      summary: Get approved user submissions
+      responses:
+        "200":
+          description: Approved submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Submission"
+    post:
+      operationId: createSubmission
+      tags: [submissions]
+      summary: Submit a love sharing entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionRequest"
+      responses:
+        "201":
+          description: Submission created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+  /location:
+    get:
+      operationId: getTruckLocation
+      tags: [location]
+      summary: Get current truck location
+      responses:
+        "200":
+          description: Truck location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TruckLocation"
+
+  /analytics/track:
+    post:
+      operationId: trackVisit
+      tags: [analytics]
+      summary: Track a page visit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyticsTrackRequest"
+      responses:
+        "200":
+          description: Tracked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginRequest"
+      responses:
+        "200":
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoginResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get admin dashboard stats
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/menu:
+    get:
+      operationId: adminGetMenuItems
+      tags: [admin]
+      summary: Get all menu items (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All menu items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MenuItem"
+    post:
+      operationId: adminCreateMenuItem
+      tags: [admin]
+      summary: Create menu item
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuItemRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuItem"
+
+  /admin/menu/{id}:
+    put:
+      operationId: adminUpdateMenuItem
+      tags: [admin]
+      summary: Update menu item
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MenuItemRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuItem"
+    delete:
+      operationId: adminDeleteMenuItem
+      tags: [admin]
+      summary: Delete menu item
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/discounts:
+    get:
+      operationId: adminGetDiscounts
+      tags: [admin]
+      summary: Get all discounts (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All discounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Discount"
+    post:
+      operationId: adminCreateDiscount
+      tags: [admin]
+      summary: Create discount
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiscountRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Discount"
+
+  /admin/discounts/{id}:
+    put:
+      operationId: adminUpdateDiscount
+      tags: [admin]
+      summary: Update discount
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiscountRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Discount"
+    delete:
+      operationId: adminDeleteDiscount
+      tags: [admin]
+      summary: Delete discount
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/location:
+    put:
+      operationId: adminUpdateLocation
+      tags: [admin]
+      summary: Update truck location
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TruckLocationRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TruckLocation"
+
+  /admin/submissions:
+    get:
+      operationId: adminGetSubmissions
+      tags: [admin]
+      summary: Get all submissions (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Submission"
+
+  /admin/submissions/{id}/approve:
+    put:
+      operationId: adminApproveSubmission
+      tags: [admin]
+      summary: Approve/reject submission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveSubmissionRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+  /admin/winners:
+    get:
+      operationId: adminGetWinners
+      tags: [admin]
+      summary: Get all stopwatch winners (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All winners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StopwatchWinner"
+
+  /admin/analytics:
+    get:
+      operationId: getAdminAnalytics
+      tags: [admin]
+      summary: Get analytics data
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsData"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +515,400 @@ components:
       required:
         - status
 
+    MenuItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        isVeg:
+          type: boolean
+        price:
+          type: number
+        description:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+        isAvailable:
+          type: boolean
+        updatedAt:
+          type: string
+      required:
+        - id
+        - name
+        - category
+        - isVeg
+        - price
+        - isAvailable
+        - updatedAt
+
+    MenuItemRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        isVeg:
+          type: boolean
+        price:
+          type: number
+        description:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+        isAvailable:
+          type: boolean
+      required:
+        - name
+        - category
+        - isVeg
+        - price
+        - isAvailable
+
+    Discount:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        discountPercentage:
+          type: number
+        isActive:
+          type: boolean
+        isAuto:
+          type: boolean
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+        posterUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - discountPercentage
+        - isActive
+        - isAuto
+        - createdAt
+
+    DiscountRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        discountPercentage:
+          type: number
+        isActive:
+          type: boolean
+        isAuto:
+          type: boolean
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+        posterUrl:
+          type: string
+          nullable: true
+      required:
+        - name
+        - discountPercentage
+        - isActive
+        - isAuto
+
+    StopwatchAttemptRequest:
+      type: object
+      properties:
+        userName:
+          type: string
+        timeStopped:
+          type: number
+        ipAddress:
+          type: string
+      required:
+        - userName
+        - timeStopped
+
+    StopwatchAttemptResult:
+      type: object
+      properties:
+        isWinner:
+          type: boolean
+        timeStopped:
+          type: number
+        message:
+          type: string
+        alreadyPlayed:
+          type: boolean
+      required:
+        - isWinner
+        - timeStopped
+        - message
+        - alreadyPlayed
+
+    StopwatchWinner:
+      type: object
+      properties:
+        id:
+          type: integer
+        userName:
+          type: string
+        timeStopped:
+          type: number
+        prize:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - userName
+        - timeStopped
+        - prize
+        - createdAt
+
+    CanPlayStatus:
+      type: object
+      properties:
+        canPlay:
+          type: boolean
+        message:
+          type: string
+      required:
+        - canPlay
+        - message
+
+    Submission:
+      type: object
+      properties:
+        id:
+          type: integer
+        userName:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+        experienceText:
+          type: string
+        approved:
+          type: boolean
+        location:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - userName
+        - experienceText
+        - approved
+        - createdAt
+
+    SubmissionRequest:
+      type: object
+      properties:
+        userName:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+        experienceText:
+          type: string
+        location:
+          type: string
+          nullable: true
+      required:
+        - userName
+        - experienceText
+
+    ApproveSubmissionRequest:
+      type: object
+      properties:
+        approved:
+          type: boolean
+      required:
+        - approved
+
+    TruckLocation:
+      type: object
+      properties:
+        id:
+          type: integer
+        currentLocation:
+          type: string
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+        updatedAt:
+          type: string
+        updatedBy:
+          type: string
+          nullable: true
+      required:
+        - id
+        - currentLocation
+        - updatedAt
+
+    TruckLocationRequest:
+      type: object
+      properties:
+        currentLocation:
+          type: string
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+      required:
+        - currentLocation
+
+    AnalyticsTrackRequest:
+      type: object
+      properties:
+        visitorIp:
+          type: string
+        country:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        userAgent:
+          type: string
+          nullable: true
+        page:
+          type: string
+          nullable: true
+      required:
+        - visitorIp
+
+    AnalyticsData:
+      type: object
+      properties:
+        totalVisits:
+          type: integer
+        todayVisits:
+          type: integer
+        topCities:
+          type: array
+          items:
+            $ref: "#/components/schemas/CityCount"
+        recentVisits:
+          type: array
+          items:
+            $ref: "#/components/schemas/VisitRecord"
+      required:
+        - totalVisits
+        - todayVisits
+        - topCities
+        - recentVisits
+
+    CityCount:
+      type: object
+      properties:
+        city:
+          type: string
+        count:
+          type: integer
+      required:
+        - city
+        - count
+
+    VisitRecord:
+      type: object
+      properties:
+        visitorIp:
+          type: string
+        country:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        visitedAt:
+          type: string
+        page:
+          type: string
+          nullable: true
+      required:
+        - visitorIp
+        - visitedAt
+
+    AdminLoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AdminLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        email:
+          type: string
+      required:
+        - token
+        - email
+
+    AdminStats:
+      type: object
+      properties:
+        totalVisits:
+          type: integer
+        totalMenuItems:
+          type: integer
+        totalWinners:
+          type: integer
+        totalSubmissions:
+          type: integer
+        pendingSubmissions:
+          type: integer
+        activeDiscounts:
+          type: integer
+      required:
+        - totalVisits
+        - totalMenuItems
+        - totalWinners
+        - totalSubmissions
+        - pendingSubmissions
+        - activeDiscounts
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Shake Crazy Food Truck"
+version = "1.0.0"
+id = "artifacts/shake-crazy"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21197
+
+[services.development]
+run = "pnpm --filter @workspace/shake-crazy run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/shake-crazy", "run", "build" ]
+publicDir = "artifacts/shake-crazy/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21197"
+BASE_PATH = "/"

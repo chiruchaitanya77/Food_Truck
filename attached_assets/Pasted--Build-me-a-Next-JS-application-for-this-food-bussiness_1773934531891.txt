@@ -1,0 +1,222 @@
+￼
+Build me a Next JS application for this food bussiness which is actually a Food truck with menu that goes something like this
+PIZZA
+NV - Chiken Pancer feast
+NV - Spiced Double Chiken
+V - Paneer Tikka Crust
+
+BURGER
+NV - Crispy Chiken Blast
+NV - Crispy chiken
+V - Spicy Paneer Blast
+V - Spicy Paneer
+
+SANDWICH
+NV - Chiken Cheese
+V - Paneer Grill
+
+ROLLS
+NV - Panner n Chiken
+V - Masala Paneer Corn
+
+MUST TRY
+Cheese Cake
+Choco Dream pastry
+Death by chocolate
+U.S.A Viral Chips
+USA viral Chips
+Choco Dream Temptation
+
+SHAKES / THICK SHAKES
+ferero Dac…
+frozen kitkat
+Lotus Biscoff
+Mississippi mud
+Mango Gush
+Hide & Seek Delight
+Nutty Sharjah
+
+DESSERT
+Apricot Delight (Organic)
+
+shakecrazyofficial is the instagram page
+ShakeCrazyOfficial
+23 posts
+163 followers
+51 following
+"🍕 Pizzas | 🥤 Shakes | 🍔 Burgers | 🌯 Wraps & QuickBytes | 🍦 Ice Creams | 
+This is the slogan of it Serving happiness on the go 🚚📍
+and for every event or festivals like cricket, christmas, ugadhi, holi, sankranthi etcc.. there will be approximately 8%-10% discount going on and there is a special feature that there will be a stop watch and who ever stops it at exactly 10 seconds can get any one treat for free, implement that also in website and use very intuituve and attractive and creative UI and also can use GSAP and scrolll aniamtions and video backgrounds and efects like 3D and parallax backgrounds and effects and locomotive scroll if gsap supports smooth an fast loading of website , website should be fully optimized and fast laoding with proper management and also add some analytics like user visit count and geo location tracking like country and city and ip address (using import { useGeolocation } from 'react-haiku';) and admin panel where those all can be seen , use supabase database , and can use best practises in cookies and session storage and localstorage and keep the admin panel fool proof and majorly ad love sharing setion where users can uplaod pics and can share the experience of food and show it in a best named section where its displayed in the website's landing page uploaded experienceds and security should be best using proper validations to input fields and check magic inputs in image upalod field and strictly avoid manipualting of db and attacks and malicious srpts injecting through input fields an image upload fields. and use the best color pallet that suits best for this kind of food industry, the image contains the colors that are used by the food truck which can also be used as website color pallet and some unique shades can be added to make the website satndout  Before I start building this amazing Shake Crazy food truck website, I need to clarify a few things:
+
+Required API Keys/Credentials:
+
+Supabase Setup - Do you have a Supabase project? I'll need:
+Supabase URL
+Supabase Anon Key
+(Or should I guide you to create a free Supabase account?)
+Feature Clarifications: 2. Stopwatch Game - Should this be: a. Available once per user per day (tracked by cookies/session)? b. Unlimited attempts? c. Should we track winners in the admin panel?
+
+Admin Panel Access - How should admin login work? a. Simple password-based login? b. Email/password with Supabase Auth? c. Should I create a default admin account?
+
+Menu Items - Should I: a. Add pricing to menu items (you can update later in admin)? b. Make menu editable through admin panel, or keep it static?
+
+Festival Discounts - Should these be: a. Manually activated through admin panel? b. Auto-activated based on calendar dates?
+
+Please provide the Supabase credentials so I can proceed with implementation!
+
+answers
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://pxpmvbnbzqoqsucwwyvq.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...8UA
+SUPABASE_SERVICE_ROLE_KEY=eyJ...WQk
+
+JWT_SECRET=a5f...81b
+
+# Gmail SMTP (use App Password, not regular password)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=chiruchaitanya77@gmail.com
+SMTP_PASS=zbpj dtiz dbxs cawm
+ADMIN_EMAIL=chak7755@gmail.com
+
+NODE_ENV=production
+
+above are supabase credentials
+
+yes once per day per user and should be tracked and track winners also in admin panel and also show them to public
+yes simple email and passowrd with spuabase storagee of credentials , yes create default and telll me how i should update it safely.
+yes serve them from db and give the editing of menu in admin panel and should be reflected immediately with time showing when the menu is updated.
+add a toogle in admin panel whether its auto actiavted or manual and can add customization of dates and name and posters of it and the discounts
+also add a new feature that where the truck is located now at .
+   **COMPREHENSIVE PLAN FOR SHAKE CRAZY FOOD TRUCK WEBSITE**
+
+## PHASE 1: HARD PARTS FIRST - SUPABASE INTEGRATION & SECURITY
+
+### Database Schema (Supabase Tables):
+1. **menu_items** - id, name, category, is_veg, price, description, image_url, created_at, updated_at
+2. **user_submissions** - id, user_name, image_url, experience_text, approved, created_at, ip_address, location
+3. **analytics** - id, visitor_ip, country, city, user_agent, visited_at
+4. **stopwatch_winners** - id, user_name, time_stopped, prize, created_at, ip_address
+5. **stopwatch_attempts** - id, user_id, attempt_date, ip_address (to track daily limit)
+6. **festival_discounts** - id, name, discount_percentage, is_active, is_auto, start_date, end_date, poster_url, created_at
+7. **truck_location** - id, current_location, latitude, longitude, updated_at, updated_by
+8. **admin_users** - id, email, created_at (Supabase Auth will handle passwords)
+
+### Storage Buckets:
+1. **user-submissions** - for user uploaded images
+2. **festival-posters** - for discount event posters
+3. **menu-images** - for menu item images
+
+### Security Implementation:
+1. Image upload validation (file type, size, magic bytes check)
+2. SQL injection prevention (parameterized queries)
+3. XSS prevention (sanitize inputs)
+4. Rate limiting on stopwatch game
+5. Admin-only routes protection
+
+## PHASE 2: IMPLEMENTATION ORDER
+
+### Step 1: Environment Setup & Supabase Client
+- Add Supabase credentials to .env
+- Install @supabase/supabase-js
+- Create Supabase client utilities
+
+### Step 2: Database Schema Setup
+- Create SQL migration file for all tables
+- Set up RLS policies
+- Create storage buckets
+
+### Step 3: Core API Routes
+- /api/menu - GET menu items
+- /api/admin/menu - CRUD operations
+- /api/stopwatch - POST attempt, GET winners
+- /api/submissions - POST upload, GET approved
+- /api/analytics - POST track visit
+- /api/location - GET/UPDATE truck location
+- /api/discounts - GET active discounts, CRUD (admin)
+- /api/admin/auth - Login/logout
+
+### Step 4: Frontend Pages
+- Landing page with all sections
+- Admin dashboard
+- Menu display with categories
+- Stopwatch game component
+- User submission form
+- Love sharing gallery
+
+### Step 5: Advanced UI
+- GSAP scroll animations
+- Parallax backgrounds
+- 3D effects
+- Video backgrounds
+- Locomotive scroll integration
+- Color palette: Red (#FF3B3B), Yellow (#FFD700), White, with food-themed gradients
+
+### Step 6: Testing
+- Backend API tests
+- Frontend UI tests
+
+**DEFAULT ADMIN CREDENTIALS:**
+- Email: admin@shakecrazy.com
+- Password: ShakeCrazy2025! (User will change via admin panel)
+
+ Customer Website (Stunning UI with GSAP Animations) Hero Section: Animated gradient background (red & yellow theme from truck image), floating icons, smooth fade-ins
+* Dynamic Menu: 7 categories (Pizza, Burger, Sandwich, Rolls, Must Try, Shakes, Desserts) with 25+ pre-loaded items
+* 10-Second Challenge Game: Interactive stopwatch - stop at exactly 10.000s to win a free treat! (1 attempt/day)
+* Love Sharing Section: Users upload food photos & experiences with geolocation tracking
+* Festival Discounts: Prominent banner display for special events (Cricket, Christmas, etc.)
+* Live Truck Location: Shows current truck location with last update timestamp
+* Recent Winners Showcase: Public display of stopwatch game winners
+* Instagram Integration: Link to @shakecrazyofficial
+* Responsive Design: Mobile-first, optimized for all devices
+* Smooth Animations: GSAP scroll triggers, parallax effects, card hover animations
+🔐 Admin Panel (/admin)
+* Secure Authentication: JWT-based login system
+* Analytics Dashboard: Real-time stats (total visits, winners, submissions, menu items)
+* Menu Management: Add/edit/delete items, toggle availability, update prices
+* Discount Manager: Create festival discounts with auto/manual activation & date ranges
+* Submission Moderation: Approve/reject user-uploaded content
+* Location Updates: Update current truck location with coordinates
+* Visitor Analytics: Country/city breakdown, recent visits, IP tracking
+* Winner Tracking: View all stopwatch game winners
+🔧 Complete Backend API
+Public Endpoints:
+* Menu retrieval, discount display, submissions, winners, location, analytics tracking
+Admin Endpoints (Protected):
+* CRUD operations for menu, discounts, submissions, location updates
+* Comprehensive analytics dashboard
+* JWT authentication
+🗄️ Supabase Database (Schema Ready)
+* menu_items - 25+ items pre-loaded
+* user_submissions - With image storage & geolocation
+* analytics - Visitor tracking (IP, country, city)
+* stopwatch_winners & stopwatch_attempts - Game management
+* festival_discounts - With auto-activation by dates
+* truck_location - GPS coordinates
+* admin_profiles - Admin users
+* Row Level Security policies configured
+* Storage Buckets for images (user-submissions, festival-posters, menu-images)
+🎨 Design System
+* Colors: Red (#FF3B3B) & Yellow (#FFD700) from your food truck image
+* Typography: Righteous (display) + Poppins (body)
+* Components: 25+ shadcn/ui components
+* Animations: GSAP with ScrollTrigger, floating effects, card hover 3D transforms
+🔒 Security Features
+* Input sanitization (XSS prevention)
+* Image validation (type, size, magic bytes check)
+* SQL injection prevention (parameterized queries)
+* Rate limiting (1 stopwatch attempt per day)
+* JWT authentication
+* Supabase RLS policies  Key Features Highlight:
+* Stopwatch Game: Daily challenge, track winners, auto-detect 10.000s with 0.1s tolerance
+* Love Sharing: User photo uploads with admin moderation, geolocation display
+* Festival Discounts: Manual or auto-activation by dates, customizable percentages
+* Analytics: Real-time visitor tracking, country/city breakdown, winner statistics
+* Menu Management: Live updates, veg/non-veg badges, availability toggle
+* 📦 Tech Stack:
+* Next.js 14 (App Router)
+* Supabase (PostgreSQL + Storage)
+* GSAP + ScrollTrigger
+* Tailwind CSS + shadcn/ui
+* Sonner (notifications)
+* Lucide React (icons)
