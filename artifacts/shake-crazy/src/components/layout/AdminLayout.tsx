@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { getAuthToken, clearAuthToken } from "@/lib/auth";
-import { LayoutDashboard, Utensils, TicketPercent, Camera, Trophy, MapPin, LogOut } from "lucide-react";
+import { LayoutDashboard, Utensils, TicketPercent, Camera, Trophy, MapPin, LogOut, BarChart3 } from "lucide-react";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -24,11 +24,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { icon: Camera, label: "Submissions", href: "/admin/submissions" },
     { icon: Trophy, label: "Winners", href: "/admin/winners" },
     { icon: MapPin, label: "Location", href: "/admin/location" },
+    { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
   ];
 
   return (
     <div className="min-h-screen bg-gray-100 flex font-sans">
-      <aside className="w-64 bg-foreground text-background flex flex-col shadow-2xl z-10">
+      <aside className="w-64 bg-foreground text-background flex flex-col shadow-2xl z-10 shrink-0">
         <div className="p-6">
           <Link href="/admin" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
@@ -37,7 +38,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <span className="font-display text-2xl tracking-widest text-white">ADMIN</span>
           </Link>
         </div>
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 px-4 py-2 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location === item.href;

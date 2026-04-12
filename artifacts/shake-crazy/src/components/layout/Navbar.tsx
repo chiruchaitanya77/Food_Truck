@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, MapPin, Instagram, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Menu, X, Instagram, ChevronDown } from "lucide-react";
+
+function smoothScrollTo(id: string) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [location] = useLocation();
+  const isHome = location === "/" || location === "";
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -14,15 +19,22 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
-    { href: "#menu", label: "Menu" },
-    { href: "#challenge", label: "10s Challenge" },
-    { href: "#gallery", label: "Love Gallery" },
-    { href: "#location", label: "Where are we?" },
+  if (location.startsWith("/admin")) return null;
+
+  const sectionLinks = [
+    { id: "challenge", label: "10s Challenge" },
+    { id: "gallery", label: "Love Gallery" },
+    { id: "location", label: "Where are we?" },
   ];
 
-  // If on admin routes, don't show consumer navbar
-  if (location.startsWith("/admin")) return null;
+  const handleSectionLink = (id: string) => {
+    setMobileOpen(false);
+    if (isHome) {
+      smoothScrollTo(id);
+    } else {
+      window.location.href = `/#${id}`;
+    }
+  };
 
   return (
     <nav
@@ -44,15 +56,23 @@ export function Navbar() {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
+          <Link
+            href="/menu"
+            className="font-semibold text-foreground/80 hover:text-primary transition-colors relative after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left"
+          >
+            Menu
+          </Link>
+
+          {sectionLinks.map((link) => (
+            <button
+              key={link.id}
+              onClick={() => handleSectionLink(link.id)}
               className="font-semibold text-foreground/80 hover:text-primary transition-colors relative after:content-[''] after:absolute after:w-full after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left"
             >
               {link.label}
-            </a>
+            </button>
           ))}
+
           <a
             href="https://instagram.com/shakecrazyofficial"
             target="_blank"
@@ -74,22 +94,28 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {mobileOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-background/95 backdrop-blur-lg border-b border-border p-4 flex flex-col gap-4 shadow-xl">
-          {navLinks.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="text-lg font-semibold px-4 py-2 hover:bg-muted rounded-xl transition-colors"
-              onClick={() => setMobileOpen(false)}
+        <div className="md:hidden absolute top-full left-0 right-0 bg-background/95 backdrop-blur-lg border-b border-border p-4 flex flex-col gap-2 shadow-xl">
+          <Link
+            href="/menu"
+            className="text-lg font-semibold px-4 py-2.5 hover:bg-muted rounded-xl transition-colors"
+            onClick={() => setMobileOpen(false)}
+          >
+            Menu
+          </Link>
+          {sectionLinks.map((link) => (
+            <button
+              key={link.id}
+              className="text-left text-lg font-semibold px-4 py-2.5 hover:bg-muted rounded-xl transition-colors"
+              onClick={() => handleSectionLink(link.id)}
             >
               {link.label}
-            </a>
+            </button>
           ))}
           <a
             href="https://instagram.com/shakecrazyofficial"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-lg font-semibold px-4 py-2 text-primary"
+            className="flex items-center gap-2 text-lg font-semibold px-4 py-2.5 text-primary hover:bg-muted rounded-xl"
             onClick={() => setMobileOpen(false)}
           >
             <Instagram className="w-5 h-5" /> Follow Us

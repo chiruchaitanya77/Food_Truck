@@ -41,6 +41,10 @@ export const stopwatchWinnersTable = pgTable("stopwatch_winners", {
   timeStopped: real("time_stopped").notNull(),
   prize: text("prize").notNull().default("Free Treat"),
   ipAddress: text("ip_address"),
+  city: text("city"),
+  country: text("country"),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -67,6 +71,10 @@ export const userSubmissionsTable = pgTable("user_submissions", {
   approved: boolean("approved").notNull().default(false),
   ipAddress: text("ip_address"),
   location: text("location"),
+  city: text("city"),
+  country: text("country"),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -92,6 +100,8 @@ export const analyticsTable = pgTable("analytics", {
   visitorIp: text("visitor_ip").notNull(),
   country: text("country"),
   city: text("city"),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
   userAgent: text("user_agent"),
   page: text("page"),
   visitedAt: timestamp("visited_at").notNull().defaultNow(),

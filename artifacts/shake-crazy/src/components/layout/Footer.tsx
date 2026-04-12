@@ -1,9 +1,21 @@
-import { Instagram, MapPin, Mail } from "lucide-react";
+import { Instagram, MapPin, Mail, Eye } from "lucide-react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { getApiUrl } from "@/lib/api";
 
 export function Footer() {
   const [location] = useLocation();
   if (location.startsWith("/admin")) return null;
+
+  const { data: countData } = useQuery({
+    queryKey: ["/api/analytics/count"],
+    queryFn: async () => {
+      const res = await fetch(getApiUrl("/api/analytics/count"));
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 60_000,
+  });
 
   return (
     <footer className="bg-foreground text-background py-16 overflow-hidden relative">
@@ -21,7 +33,7 @@ export function Footer() {
           <p className="text-background/70 font-medium mb-6">
             Serving happiness on the go. The craziest shakes, juiciest burgers, and loaded pizzas in town!
           </p>
-          <div className="flex gap-4">
+          <div className="flex gap-4 mb-6">
             <a href="https://instagram.com/shakecrazyofficial" target="_blank" rel="noopener" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors hover:-translate-y-1 duration-200">
               <Instagram className="w-5 h-5" />
             </a>
@@ -29,6 +41,16 @@ export function Footer() {
               <Mail className="w-5 h-5" />
             </a>
           </div>
+
+          {/* Visitor counter */}
+          {countData?.totalVisits > 0 && (
+            <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2">
+              <Eye className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold text-white">
+                {countData.totalVisits.toLocaleString()} happy visitors
+              </span>
+            </div>
+          )}
         </div>
 
         <div>
@@ -51,6 +73,7 @@ export function Footer() {
           </div>
         </div>
       </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-white/10 text-center text-background/50 font-medium text-sm">
         <p>© {new Date().getFullYear()} Shake Crazy Food Truck. All rights reserved.</p>
       </div>

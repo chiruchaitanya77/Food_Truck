@@ -123,6 +123,10 @@ export const CreateSubmissionBody = zod.object({
   imageUrl: zod.string().nullish(),
   experienceText: zod.string(),
   location: zod.string().nullish(),
+  city: zod.string().nullish(),
+  country: zod.string().nullish(),
+  latitude: zod.number().nullish(),
+  longitude: zod.number().nullish(),
 });
 
 /**
@@ -144,6 +148,8 @@ export const TrackVisitBody = zod.object({
   visitorIp: zod.string(),
   country: zod.string().nullish(),
   city: zod.string().nullish(),
+  latitude: zod.number().nullish(),
+  longitude: zod.number().nullish(),
   userAgent: zod.string().nullish(),
   page: zod.string().nullish(),
 });

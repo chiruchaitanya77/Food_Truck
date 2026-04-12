@@ -10,7 +10,7 @@ packages:
   "zod": "For schema validation on forms"
 
 images:
-  - path: "artifacts/shake-crazy/public/images/hero-truck.png"
+  - path: "artifacts/shake-crazy/public/images/hero-truck_bg.png"
     description: "A highly stylized, modern vector illustration of a red and yellow food truck. Vibrant, playful street food energy. Transparent background if possible."
     aspect_ratio: "16:9"
   - path: "artifacts/shake-crazy/public/images/food-pattern.png"

@@ -1,5 +1,5 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useAdminGetSubmissions, useAdminApproveSubmission } from "@workspace/api-client-react";
+import { useAdminGetSubmissions, useAdminApproveSubmission, useAdminDeleteSubmission } from "@workspace/api-client-react";
 import { withAuth } from "@/lib/auth";
 import { Check, X, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ export default function SubmissionsManager() {
   const queryClient = useQueryClient();
   const { data: submissions, isLoading } = useAdminGetSubmissions({ request: withAuth() });
   const approveSub = useAdminApproveSubmission({ request: withAuth() });
+  const deleteSub = useAdminDeleteSubmission({ request: withAuth() });
   const { toast } = useToast();
 
   const handleToggleApprove = async (id: number, currentStatus: boolean) => {
@@ -21,6 +22,17 @@ export default function SubmissionsManager() {
       toast({ title: !currentStatus ? "Approved" : "Hidden", description: "Gallery updated." });
     } catch {
       toast({ title: "Error updating", variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteSub.mutateAsync({ id });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/submissions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/submissions"] });
+      toast({ title: "Deleted", description: "Submission removed." });
+    } catch {
+      toast({ title: "Error deleting", variant: "destructive" });
     }
   };
 
@@ -59,17 +71,27 @@ export default function SubmissionsManager() {
 
             <p className="text-gray-700 font-medium italic mb-6">"{sub.experienceText}"</p>
 
-            <Button 
-              onClick={() => handleToggleApprove(sub.id, sub.approved)}
-              variant={sub.approved ? "outline" : "default"}
-              className={`w-full rounded-xl h-12 font-bold ${!sub.approved ? 'bg-green-500 hover:bg-green-600 text-white' : ''}`}
+            <div className="flex flex-row gap-4 justify-between items-center">
+            <Button
+                onClick={() => handleDelete(sub.id)}
+                variant="destructive"
+                className="w-full rounded-xl h-12 font-bold"
             >
-              {sub.approved ? (
-                <><X className="w-4 h-4 mr-2" /> Hide from Gallery</>
-              ) : (
-                <><Check className="w-4 h-4 mr-2" /> Approve & Publish</>
-              )}
+              <X className="w-4 h-4 mr-2" /> Delete
             </Button>
+
+              <Button
+                  onClick={() => handleToggleApprove(sub.id, sub.approved)}
+                  variant={sub.approved ? "outline" : "default"}
+                  className={`w-full rounded-xl h-12 font-bold ${!sub.approved ? 'bg-green-500 hover:bg-green-600 text-white' : ''}`}
+              >
+                {sub.approved ? (
+                    <><X className="w-4 h-4 mr-2" /> Hide from Gallery</>
+                ) : (
+                    <><Check className="w-4 h-4 mr-2" /> Approve & Publish</>
+                )}
+              </Button>
+            </div>
           </div>
         ))}
       </div>
