@@ -90,10 +90,22 @@ export function Hero() {
 
           <div className="relative hero-truck perspective-1000 hidden sm:block">
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-secondary/20 rounded-full blur-3xl transform scale-75 -z-10" />
+            {/*<img*/}
+            {/*  src={`${import.meta.env.BASE_URL}images/hero-truck.png`}*/}
+            {/*  alt="Shake Crazy Food Truck"*/}
+            {/*  className="w-full h-auto drop-shadow-2xl transform scale-150 rotate-y-[-10deg] rotate-x-[5deg]"*/}
+            {/*/>*/}
             <img
-              src={`${import.meta.env.BASE_URL}images/hero-truck.png`}
-              alt="Shake Crazy Food Truck"
-              className="w-full h-auto drop-shadow-2xl transform scale-150 rotate-y-[-10deg] rotate-x-[5deg]"
+                src={`${import.meta.env.BASE_URL}images/hero-truck.png`}
+                alt="Shake Crazy Food Truck"
+                className="
+                  w-full h-auto
+                  drop-shadow-2xl transform
+
+                  scale-100 sm:scale-110 md:scale-125 lg:scale-150
+                  rotate-y-0 sm:rotate-y-[-5deg] md:rotate-y-[-10deg]
+                  rotate-x-0 sm:rotate-x-[3deg] md:rotate-x-[5deg]
+                "
             />
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useCanPlayStopwatch, useGetStopwatchWinners } from "@workspace/api-client-react";
+import {useCanPlayStopwatch, useGetStopwatchWinners, useSubmitStopwatchAttempt} from "@workspace/api-client-react";
 import { Trophy, Timer, Play, Square, Loader2, Calendar, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,13 @@ import { getApiUrl } from "@/lib/api";
 export function StopwatchSection() {
   const { data: canPlayStatus, isLoading: checkLoading } = useCanPlayStopwatch({ ip: 'guest' });
   const { data: winners, refetch: refetchWinners } = useGetStopwatchWinners({ limit: 5 });
+  const submitAttempt = useSubmitStopwatchAttempt();
   const { toast } = useToast();
 
   const [name, setName] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
-  
+
   // Stopwatch logic
   const [time, setTime] = useState(0);
   const [running, setRunning] = useState(false);
@@ -40,48 +41,96 @@ export function StopwatchSection() {
     reqRef.current = requestAnimationFrame(updateTime);
   };
 
+  // const handleStop = async () => {
+  //   cancelAnimationFrame(reqRef.current);
+  //   setRunning(false);
+  //   setHasPlayed(true);
+  //
+  //   const finalSeconds = time / 1000;
+  //
+  //   const geo = await Promise.race([
+  //     requestGeoLocation(),
+  //     new Promise<null>(res => setTimeout(() => res(null), 3000)),
+  //   ]);
+  //
+  //   try {
+  //     const res = await fetch(getApiUrl("/api/stopwatch/attempt"), {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         userName: name,
+  //         timeStopped: finalSeconds,
+  //         latitude: geo?.latitude ?? null,
+  //         longitude: geo?.longitude ?? null,
+  //       }),
+  //     });
+  //     const result = await res.json();
+  //
+  //     if (result.isWinner) {
+  //       confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#E63946', '#FFCA3A'] });
+  //       toast({
+  //         title: "🎉 YOU WON! 🎉",
+  //         description: result.message,
+  //         className: "bg-green-500 text-white border-none",
+  //       });
+  //       refetchWinners();
+  //     } else {
+  //       toast({
+  //         title: "Aww, close!",
+  //         description: result.message,
+  //         variant: "destructive"
+  //       });
+  //     }
+  //   } catch {
+  //     toast({ title: "Error", description: "Failed to submit attempt.", variant: "destructive" });
+  //   }
+  // };
+
+
   const handleStop = async () => {
     cancelAnimationFrame(reqRef.current);
     setRunning(false);
     setHasPlayed(true);
-    
+
     const finalSeconds = time / 1000;
-    
+
     const geo = await Promise.race([
       requestGeoLocation(),
-      new Promise<null>(res => setTimeout(() => res(null), 3000)),
+      new Promise<null>((res) => setTimeout(() => res(null), 3000)),
     ]);
 
     try {
-      const res = await fetch(getApiUrl("/api/stopwatch/attempt"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const result = await submitAttempt.mutateAsync({
+        data: {
           userName: name,
           timeStopped: finalSeconds,
           latitude: geo?.latitude ?? null,
           longitude: geo?.longitude ?? null,
-        }),
+        },
       });
-      const result = await res.json();
 
       if (result.isWinner) {
-        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#E63946', '#FFCA3A'] });
+        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+
         toast({
           title: "🎉 YOU WON! 🎉",
           description: result.message,
-          className: "bg-green-500 text-white border-none",
         });
+
         refetchWinners();
       } else {
         toast({
           title: "Aww, close!",
           description: result.message,
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } catch {
-      toast({ title: "Error", description: "Failed to submit attempt.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to submit attempt.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -98,7 +147,7 @@ export function StopwatchSection() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          
+
           {/* Game Area */}
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 font-semibold mb-6">
@@ -127,15 +176,15 @@ export function StopwatchSection() {
                 <div className="flex flex-col items-center">
                   {!isPlaying ? (
                     <div className="w-full space-y-4">
-                      <Input 
-                        placeholder="Enter your hero name..." 
-                        value={name} 
+                      <Input
+                        placeholder="Enter your hero name..."
+                        value={name}
                         onChange={e => setName(e.target.value)}
                         className="text-lg h-14 bg-muted border-none rounded-xl"
                         disabled={hasPlayed}
                       />
-                      <Button 
-                        onClick={handleStart} 
+                      <Button
+                        onClick={handleStart}
                         disabled={hasPlayed || !name.trim()}
                         className="w-full h-16 text-xl font-bold bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-xl shadow-lg hover:scale-[1.02] transition-transform"
                       >
@@ -147,7 +196,7 @@ export function StopwatchSection() {
                       <div className={`font-mono text-7xl md:text-8xl font-bold tracking-tighter mb-8 tabular-nums ${running ? 'text-foreground' : (Math.abs((time/1000) - 10) <= 0.1 ? 'text-green-500' : 'text-destructive')}`}>
                         {formatTime(time)}
                       </div>
-                      <Button 
+                      <Button
                         onClick={handleStop}
                         disabled={!running}
                         className={`w-full h-20 text-3xl font-display tracking-wider rounded-2xl shadow-xl transition-all ${
@@ -172,7 +221,7 @@ export function StopwatchSection() {
               <Trophy className="w-8 h-8 text-secondary" />
               <h3 className="font-display text-3xl text-white tracking-wide">Hall of Fame</h3>
             </div>
-            
+
             <div className="space-y-3">
               {winners?.length === 0 ? (
                 <p className="text-white/60 font-medium italic">No winners yet. Be the first!</p>

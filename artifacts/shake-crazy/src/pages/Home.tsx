@@ -7,7 +7,7 @@ import { MenuSection } from "@/components/sections/MenuSection";
 import { StopwatchSection } from "@/components/sections/StopwatchSection";
 import { LocationSection } from "@/components/sections/LocationSection";
 import { GallerySection } from "@/components/sections/GallerySection";
-import { useGetActiveDiscounts } from "@workspace/api-client-react";
+import {useGetActiveDiscounts, useTrackVisit} from "@workspace/api-client-react";
 import { requestGeoLocation } from "@/hooks/useGeoLocation";
 import { getApiUrl } from "@/lib/api";
 import {CameraIcon, Plus, Tag} from "lucide-react";
@@ -15,24 +15,41 @@ import {TbCameraSpark} from "react-icons/tb";
 
 export default function Home() {
   const { data: discounts } = useGetActiveDiscounts();
+    const trackVisitMutation = useTrackVisit();
 
-  useEffect(() => {
-    Promise.race([
-      requestGeoLocation(),
-      new Promise<null>((res) => setTimeout(() => res(null), 2500)),
-    ]).then((geo) => {
-      fetch(getApiUrl("/api/analytics/track"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          page: "/",
-          userAgent: navigator.userAgent,
-          latitude: geo?.latitude ?? null,
-          longitude: geo?.longitude ?? null,
-        }),
-      }).catch(() => {});
-    });
-  }, []);
+  // useEffect(() => {
+  //   Promise.race([
+  //     requestGeoLocation(),
+  //     new Promise<null>((res) => setTimeout(() => res(null), 2500)),
+  //   ]).then((geo) => {
+  //     fetch(getApiUrl("/api/analytics/track"), {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         page: "/",
+  //         userAgent: navigator.userAgent,
+  //         latitude: geo?.latitude ?? null,
+  //         longitude: geo?.longitude ?? null,
+  //       }),
+  //     }).catch(() => {});
+  //   });
+  // }, []);
+
+    useEffect(() => {
+        Promise.race([
+            requestGeoLocation(),
+            new Promise<null>((res) => setTimeout(() => res(null), 2500)),
+        ]).then((geo) => {
+            trackVisitMutation.mutate({
+                data: {
+                    page: "/",
+                    userAgent: navigator.userAgent,
+                    latitude: geo?.latitude ?? null,
+                    longitude: geo?.longitude ?? null,
+                },
+            });
+        });
+    }, []);
 
   return (
     <PageTransition>

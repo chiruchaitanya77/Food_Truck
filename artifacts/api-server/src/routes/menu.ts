@@ -8,7 +8,8 @@ import { menuItemsTable } from "@workspace/db";
 import { eq, ilike } from "drizzle-orm";
 import { requireAuth } from "../lib/auth.js";
 
-// const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const uploadsDir = path.join(__dirname, "..", "..", "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 

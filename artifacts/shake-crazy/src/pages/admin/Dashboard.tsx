@@ -1,5 +1,5 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useGetAdminStats } from "@workspace/api-client-react";
+import {useAdminAnalytics, useGetAdminStats} from "@workspace/api-client-react";
 import { useQuery } from "@tanstack/react-query";
 import { withAuth, getAuthToken } from "@/lib/auth";
 import { getApiUrl } from "@/lib/api";
@@ -10,17 +10,20 @@ import { format, parseISO } from "date-fns";
 
 export default function Dashboard() {
   const { data: stats, isLoading } = useGetAdminStats({ request: withAuth() });
+// \  const { data: analytics } = useAdminAnalytics({ request: withAuth() });
+  const { data: analytics, isLoading: analyticsLoading } = useAdminAnalytics({ request: withAuth() });
 
-  const { data: analytics } = useQuery({
-    queryKey: ["/api/admin/analytics/summary"],
-    queryFn: async () => {
-      const res = await fetch(getApiUrl("/api/admin/analytics"), {
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
-      });
-      if (!res.ok) return null;
-      return res.json();
-    },
-  });
+  // const { data: analytics } = useQuery({
+  //   queryKey: ["/api/admin/analytics/summary"],
+  //   queryFn: async () => {
+  //     const res = await fetch(getApiUrl("/api/admin/analytics"), {
+  //       headers: { Authorization: `Bearer ${getAuthToken()}` },
+  //     });
+  //     if (!res.ok) return null;
+  //     return res.json();
+  //   },
+  // });
+
 
   const statCards = [
     { label: "Total Page Visits", value: stats?.totalVisits, icon: Eye, color: "text-blue-500", bg: "bg-blue-50" },

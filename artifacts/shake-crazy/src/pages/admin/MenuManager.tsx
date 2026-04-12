@@ -1,6 +1,9 @@
 import { useState, useRef } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useAdminGetMenuItems, useAdminCreateMenuItem, useAdminUpdateMenuItem, useAdminDeleteMenuItem } from "@workspace/api-client-react";
+import {
+  useAdminGetMenuItems, useAdminCreateMenuItem, useAdminUpdateMenuItem, useAdminDeleteMenuItem,
+  useUploadMenuImage
+} from "@workspace/api-client-react";
 import { withAuth, getAuthToken } from "@/lib/auth";
 import { getApiUrl } from "@/lib/api";
 import { Plus, Pencil, Trash2, Search, Download, Upload, FileSpreadsheet, AlertCircle, ImageIcon, Link as LinkIcon } from "lucide-react";
@@ -33,6 +36,7 @@ const CATEGORIES = ["Pizza", "Burger", "Sandwich", "Rolls", "Must Try", "Shakes"
 export default function MenuManager() {
   const queryClient = useQueryClient();
   const { data: items, isLoading } = useAdminGetMenuItems({ request: withAuth() });
+  const uploadImage = useUploadMenuImage({ request: withAuth() });
   const createItem = useAdminCreateMenuItem({ request: withAuth() });
   const updateItem = useAdminUpdateMenuItem({ request: withAuth() });
   const deleteItem = useAdminDeleteMenuItem({ request: withAuth() });
@@ -68,25 +72,55 @@ export default function MenuManager() {
     setOpen(true);
   };
 
+  // const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+  //   setImageUploading(true);
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("image", file);
+  //     const res = await fetch(getApiUrl("/api/admin/menu/upload-image"), {
+  //       method: "POST",
+  //       headers: { Authorization: `Bearer ${getAuthToken()}` },
+  //       body: formData,
+  //     });
+  //     if (!res.ok) throw new Error("Upload failed");
+  //     const data = await res.json();
+  //     form.setValue("imageUrl", data.imageUrl);
+  //     toast({ title: "Image uploaded!", description: "URL set automatically." });
+  //   } catch {
+  //     toast({ title: "Image upload failed", variant: "destructive" });
+  //   }
+  //   setImageUploading(false);
+  //   e.target.value = "";
+  // };
+
+
   const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setImageUploading(true);
+
     try {
       const formData = new FormData();
       formData.append("image", file);
-      const res = await fetch(getApiUrl("/api/admin/menu/upload-image"), {
-        method: "POST",
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
+
+      const data = await uploadImage.mutateAsync(formData);
+
       form.setValue("imageUrl", data.imageUrl);
-      toast({ title: "Image uploaded!", description: "URL set automatically." });
+
+      toast({
+        title: "Image uploaded!",
+        description: "URL set automatically.",
+      });
     } catch {
-      toast({ title: "Image upload failed", variant: "destructive" });
+      toast({
+        title: "Image upload failed",
+        variant: "destructive",
+      });
     }
+
     setImageUploading(false);
     e.target.value = "";
   };

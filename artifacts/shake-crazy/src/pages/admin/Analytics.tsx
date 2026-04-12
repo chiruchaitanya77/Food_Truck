@@ -9,6 +9,7 @@ import {
 import { Eye, Users, TrendingUp, Globe, MapPin, Clock, Monitor } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, parseISO } from "date-fns";
+import {useAdminAnalytics} from "@workspace/api-client-react";
 
 const COLORS = ["#FF3B3B", "#FFD700", "#4F9EF0", "#56C27A", "#F97316", "#A855F7", "#EC4899", "#14B8A6"];
 
@@ -28,14 +29,11 @@ function StatCard({ label, value, icon: Icon, color, sub }: any) {
 }
 
 export default function Analytics() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["/api/admin/analytics"],
-    queryFn: async () => {
-      const res = await fetch(getApiUrl("/api/admin/analytics"), {
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
-      });
-      if (!res.ok) throw new Error("Failed to fetch analytics");
-      return res.json();
+  const { data, isLoading } = useAdminAnalytics({
+    request: {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
     },
   });
 

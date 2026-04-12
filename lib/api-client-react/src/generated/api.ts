@@ -874,6 +874,21 @@ export const getTrackVisitMutationOptions = <
   return { mutationFn, ...mutationOptions };
 };
 
+
+export const getAnalyticsCount = async () => {
+  return customFetch<{ totalVisits: number }>("/api/analytics/count", {
+    method: "GET",
+  });
+};
+
+export const useGetAnalyticsCount = () => {
+  return useQuery({
+    queryKey: ["/api/analytics/count"],
+    queryFn: getAnalyticsCount,
+    staleTime: 60_000,
+  });
+};
+
 export type TrackVisitMutationResult = NonNullable<
   Awaited<ReturnType<typeof trackVisit>>
 >;
@@ -1064,6 +1079,19 @@ export function useGetAdminStats<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
+
+export const useAdminAnalytics = (options?: {
+  query?: UseQueryOptions<any>;
+  request?: RequestInit;
+}) => {
+  return useQuery({
+    queryKey: ["/api/admin/analytics"],
+    queryFn: () => getAdminAnalytics(options?.request),
+    ...options?.query,
+  });
+};
+
+
 /**
  * @summary Get all menu items (admin)
  */
@@ -1077,6 +1105,30 @@ export const adminGetMenuItems = async (
   return customFetch<MenuItem[]>(getAdminGetMenuItemsUrl(), {
     ...options,
     method: "GET",
+  });
+};
+
+
+export const uploadMenuImage = async (
+    formData: FormData,
+    options?: RequestInit
+) => {
+  return customFetch<{ imageUrl: string }>("/api/admin/menu/upload-image", {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const useUploadMenuImage = (options?: {
+  mutation?: UseMutationOptions<{ imageUrl: string }, unknown, FormData>;
+  request?: RequestInit;
+}) => {
+  return useMutation({
+    mutationKey: ["uploadMenuImage"],
+    mutationFn: (formData: FormData) =>
+        uploadMenuImage(formData, options?.request),
+    ...options?.mutation,
   });
 };
 

@@ -275,9 +275,48 @@ async function parseSuccessBody(
   }
 }
 
+// export async function customFetch<T = unknown>(
+//   input: RequestInfo | URL,
+//   options: CustomFetchOptions = {},
+// ): Promise<T> {
+//   const { responseType = "auto", headers: headersInit, ...init } = options;
+//
+//   const method = resolveMethod(input, init.method);
+//
+//   if (init.body != null && (method === "GET" || method === "HEAD")) {
+//     throw new TypeError(`customFetch: ${method} requests cannot have a body.`);
+//   }
+//
+//   const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, headersInit);
+//
+//   if (
+//     typeof init.body === "string" &&
+//     !headers.has("content-type") &&
+//     looksLikeJson(init.body)
+//   ) {
+//     headers.set("content-type", "application/json");
+//   }
+//
+//   if (responseType === "json" && !headers.has("accept")) {
+//     headers.set("accept", DEFAULT_JSON_ACCEPT);
+//   }
+//
+//   const requestInfo = { method, url: resolveUrl(input) };
+//
+//   const response = await fetch(input, { ...init, method, headers });
+//
+//   if (!response.ok) {
+//     const errorData = await parseErrorBody(response, method);
+//     throw new ApiError(response, errorData, requestInfo);
+//   }
+//
+//   return (await parseSuccessBody(response, responseType, requestInfo)) as T;
+// }
+
+
 export async function customFetch<T = unknown>(
-  input: RequestInfo | URL,
-  options: CustomFetchOptions = {},
+    input: RequestInfo | URL,
+    options: CustomFetchOptions = {},
 ): Promise<T> {
   const { responseType = "auto", headers: headersInit, ...init } = options;
 
@@ -290,9 +329,9 @@ export async function customFetch<T = unknown>(
   const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, headersInit);
 
   if (
-    typeof init.body === "string" &&
-    !headers.has("content-type") &&
-    looksLikeJson(init.body)
+      typeof init.body === "string" &&
+      !headers.has("content-type") &&
+      looksLikeJson(init.body)
   ) {
     headers.set("content-type", "application/json");
   }
@@ -301,9 +340,16 @@ export async function customFetch<T = unknown>(
     headers.set("accept", DEFAULT_JSON_ACCEPT);
   }
 
-  const requestInfo = { method, url: resolveUrl(input) };
+  // const API_BASE = typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL
+  //     ? (import.meta as any).env.VITE_API_URL
+  //     : "";
 
-  const response = await fetch(input, { ...init, method, headers });
+  const API_BASE ='https://food-truck-ywel.onrender.com'
+
+  const resolvedUrl = API_BASE + resolveUrl(input);
+  const requestInfo = { method, url: resolvedUrl };
+
+  const response = await fetch(resolvedUrl, { ...init, method, headers });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

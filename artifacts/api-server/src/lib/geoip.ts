@@ -48,11 +48,11 @@ export async function resolveLocation(
     longitude?: number
 ): Promise<GeoInfo> {
   // 1️⃣ Try IP first
-  const geo = await geolocateIp(ip);
-
-  if (geo.city && geo.country) {
-    return geo; // ✅ IP worked
-  }
+  // const geo = await geolocateIp(ip);
+  //
+  // if (geo.city && geo.country) {
+  //   return geo; // ✅ IP worked
+  // }
 
   // 2️⃣ Fallback to lat/lon
   if (typeof latitude === "number" && typeof longitude === "number") {

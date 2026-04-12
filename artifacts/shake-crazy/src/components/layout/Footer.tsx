@@ -2,26 +2,30 @@ import { Instagram, MapPin, Mail, Eye } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { getApiUrl } from "@/lib/api";
+import { useGetAnalyticsCount } from "@workspace/api-client-react";
 
 export function Footer() {
   const [location] = useLocation();
   if (location.startsWith("/admin")) return null;
 
-  const { data: countData } = useQuery({
-    queryKey: ["/api/analytics/count"],
-    queryFn: async () => {
-      const res = await fetch(getApiUrl("/api/analytics/count"));
-      if (!res.ok) return null;
-      return res.json();
-    },
-    staleTime: 60_000,
-  });
+  // const { data: countData } = useQuery({
+  //   queryKey: ["/api/analytics/count"],
+  //   queryFn: async () => {
+  //     const res = await fetch(getApiUrl("/api/analytics/count"));
+  //     if (!res.ok) return null;
+  //     return res.json();
+  //   },
+  //   staleTime: 60_000,
+  // });
+
+
+  const { data: countData } = useGetAnalyticsCount();
 
   return (
     <footer className="bg-foreground text-background py-16 overflow-hidden relative">
       <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-secondary/20 rounded-full blur-3xl pointer-events-none" />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
         <div>
           <div className="flex items-center gap-3 mb-6">
