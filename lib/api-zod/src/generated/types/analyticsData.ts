@@ -5,8 +5,8 @@
  * Shake Crazy Food Truck API
  * OpenAPI spec version: 0.1.0
  */
-import type { CityCount } from "./cityCount";
-import type { VisitRecord } from "./visitRecord";
+import type { CityCount } from "./cityCount.js";
+import type { VisitRecord } from "./visitRecord.js";
 
 export interface AnalyticsData {
   totalVisits: number;

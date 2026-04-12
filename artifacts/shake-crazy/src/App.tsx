@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import Home from "@/pages/Home";
+import MenuPage from "@/pages/MenuPage";
 import AdminLogin from "@/pages/admin/Login";
 import Dashboard from "@/pages/admin/Dashboard";
 import MenuManager from "@/pages/admin/MenuManager";
@@ -11,6 +12,7 @@ import LocationManager from "@/pages/admin/LocationManager";
 import SubmissionsManager from "@/pages/admin/SubmissionsManager";
 import WinnersManager from "@/pages/admin/WinnersManager";
 import DiscountsManager from "@/pages/admin/DiscountsManager";
+import AnalyticsPage from "@/pages/admin/Analytics";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -26,8 +28,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      
-      {/* Admin Routes */}
+      <Route path="/menu" component={MenuPage} />
+
+        {/* Admin Routes */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={Dashboard} />
       <Route path="/admin/menu" component={MenuManager} />
@@ -35,7 +38,8 @@ function Router() {
       <Route path="/admin/submissions" component={SubmissionsManager} />
       <Route path="/admin/winners" component={WinnersManager} />
       <Route path="/admin/discounts" component={DiscountsManager} />
-      
+      <Route path="/admin/analytics" component={AnalyticsPage} />
+
       <Route component={NotFound} />
     </Switch>
   );

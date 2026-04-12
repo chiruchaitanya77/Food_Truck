@@ -1,15 +1,17 @@
 import { useState, useRef, useEffect } from "react";
-import { useCanPlayStopwatch, useSubmitStopwatchAttempt, useGetStopwatchWinners } from "@workspace/api-client-react";
-import { Trophy, Timer, Play, Square, Loader2 } from "lucide-react";
+import { useCanPlayStopwatch, useGetStopwatchWinners } from "@workspace/api-client-react";
+import { Trophy, Timer, Play, Square, Loader2, Calendar, MapPin } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
+import { requestGeoLocation } from "@/hooks/useGeoLocation";
+import { getApiUrl } from "@/lib/api";
 
 export function StopwatchSection() {
-  const { data: canPlayStatus, isLoading: checkLoading } = useCanPlayStopwatch({ ip: 'guest' }); // In real app, IP resolved on backend
-  const { data: winners } = useGetStopwatchWinners({ limit: 5 });
-  const submitAttempt = useSubmitStopwatchAttempt();
+  const { data: canPlayStatus, isLoading: checkLoading } = useCanPlayStopwatch({ ip: 'guest' });
+  const { data: winners, refetch: refetchWinners } = useGetStopwatchWinners({ limit: 5 });
   const { toast } = useToast();
 
   const [name, setName] = useState("");
@@ -43,14 +45,25 @@ export function StopwatchSection() {
     setRunning(false);
     setHasPlayed(true);
     
-    // Stop exactly here
-    const finalTime = time;
-    const finalSeconds = finalTime / 1000;
+    const finalSeconds = time / 1000;
     
+    const geo = await Promise.race([
+      requestGeoLocation(),
+      new Promise<null>(res => setTimeout(() => res(null), 3000)),
+    ]);
+
     try {
-      const result = await submitAttempt.mutateAsync({
-        data: { userName: name, timeStopped: finalSeconds, ipAddress: "guest" }
+      const res = await fetch(getApiUrl("/api/stopwatch/attempt"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userName: name,
+          timeStopped: finalSeconds,
+          latitude: geo?.latitude ?? null,
+          longitude: geo?.longitude ?? null,
+        }),
       });
+      const result = await res.json();
 
       if (result.isWinner) {
         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#E63946', '#FFCA3A'] });
@@ -59,6 +72,7 @@ export function StopwatchSection() {
           description: result.message,
           className: "bg-green-500 text-white border-none",
         });
+        refetchWinners();
       } else {
         toast({
           title: "Aww, close!",
@@ -66,7 +80,7 @@ export function StopwatchSection() {
           variant: "destructive"
         });
       }
-    } catch (e) {
+    } catch {
       toast({ title: "Error", description: "Failed to submit attempt.", variant: "destructive" });
     }
   };
@@ -159,23 +173,36 @@ export function StopwatchSection() {
               <h3 className="font-display text-3xl text-white tracking-wide">Hall of Fame</h3>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-3">
               {winners?.length === 0 ? (
                 <p className="text-white/60 font-medium italic">No winners yet. Be the first!</p>
               ) : (
                 winners?.map((w, i) => (
-                  <div key={w.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold">
-                        {i + 1}
+                  <div key={w.id} className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-yellow-400 text-yellow-900' : i === 1 ? 'bg-slate-300 text-slate-700' : i === 2 ? 'bg-amber-600 text-amber-100' : 'bg-white/10 text-white'}`}>
+                          {i + 1}
+                        </div>
+                        <p className="font-bold text-base text-white">{w.userName}</p>
                       </div>
-                      <div>
-                        <p className="font-bold text-lg text-white">{w.userName}</p>
-                        <p className="text-sm text-white/60 font-medium">Won {w.prize}</p>
+                      <div className="font-mono text-base font-bold text-secondary bg-black/20 px-3 py-1 rounded-lg">
+                        {w.timeStopped.toFixed(3)}s
                       </div>
                     </div>
-                    <div className="font-mono text-lg font-bold text-secondary bg-black/20 px-3 py-1 rounded-lg">
-                      {w.timeStopped.toFixed(3)}s
+                    <div className="flex flex-wrap items-center gap-3 ml-11 text-xs text-white/50 font-medium">
+                      {w.createdAt && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {format(new Date(w.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                        </span>
+                      )}
+                      {(w.city || w.country) && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {[w.city, w.country].filter(Boolean).join(", ")}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))

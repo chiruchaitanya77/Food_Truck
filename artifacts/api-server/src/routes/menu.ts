@@ -1,30 +1,49 @@
 import { Router } from "express";
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
 import { db } from "@workspace/db";
 import { menuItemsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { eq, ilike } from "drizzle-orm";
 import { requireAuth } from "../lib/auth.js";
 
+// const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadsDir = path.join(__dirname, "..", "..", "uploads");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: uploadsDir,
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `menu_${Date.now()}${ext}`);
+  },
+});
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+
 const router = Router();
+
+function formatItem(item: typeof menuItemsTable.$inferSelect) {
+  return {
+    id: item.id,
+    name: item.name,
+    category: item.category,
+    isVeg: item.isVeg,
+    price: item.price,
+    description: item.description,
+    imageUrl: item.imageUrl,
+    isAvailable: item.isAvailable,
+    updatedAt: item.updatedAt.toISOString(),
+  };
+}
 
 router.get("/menu", async (req, res) => {
   try {
     const { category, available_only } = req.query;
-    let query = db.select().from(menuItemsTable);
-    const items = await query;
-    let filtered = items;
-    if (category) filtered = filtered.filter(i => i.category === category);
-    if (available_only === "true") filtered = filtered.filter(i => i.isAvailable);
-    res.json(filtered.map(item => ({
-      id: item.id,
-      name: item.name,
-      category: item.category,
-      isVeg: item.isVeg,
-      price: item.price,
-      description: item.description,
-      imageUrl: item.imageUrl,
-      isAvailable: item.isAvailable,
-      updatedAt: item.updatedAt.toISOString(),
-    })));
+    let items = await db.select().from(menuItemsTable);
+    if (category) items = items.filter(i => i.category === category);
+    if (available_only === "true") items = items.filter(i => i.isAvailable);
+    res.json(items.map(formatItem));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -34,34 +53,55 @@ router.get("/menu", async (req, res) => {
 router.get("/admin/menu", requireAuth, async (_req, res) => {
   try {
     const items = await db.select().from(menuItemsTable);
-    res.json(items.map(item => ({
-      id: item.id,
-      name: item.name,
-      category: item.category,
-      isVeg: item.isVeg,
-      price: item.price,
-      description: item.description,
-      imageUrl: item.imageUrl,
-      isAvailable: item.isAvailable,
-      updatedAt: item.updatedAt.toISOString(),
-    })));
+    res.json(items.map(formatItem));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
+// Upload image for a menu item
+router.post("/admin/menu/upload-image", requireAuth, upload.single("image"), (req, res) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: "No file uploaded" });
+      return;
+    }
+    const protocol = req.protocol;
+    const host = req.get("host");
+    const imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+    res.json({ imageUrl });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Upload failed" });
+  }
+});
+
 router.post("/admin/menu", requireAuth, async (req, res) => {
   try {
     const { name, category, isVeg, price, description, imageUrl, isAvailable } = req.body;
+
+    // Duplicate check — prevent same name (case-insensitive) from being added
+    const existing = await db.select({ id: menuItemsTable.id })
+      .from(menuItemsTable)
+      .where(ilike(menuItemsTable.name, name.trim()))
+      .limit(1);
+
+    if (existing.length > 0) {
+      res.status(409).json({ error: `A menu item named "${name}" already exists. Please use a different name or edit the existing item.` });
+      return;
+    }
+
     const [item] = await db.insert(menuItemsTable).values({
-      name, category, isVeg: isVeg ?? false, price, description: description ?? "", imageUrl, isAvailable: isAvailable ?? true,
+      name: name.trim(),
+      category,
+      isVeg: isVeg ?? false,
+      price,
+      description: description ?? "",
+      imageUrl: imageUrl || null,
+      isAvailable: isAvailable ?? true,
     }).returning();
-    res.status(201).json({
-      id: item.id, name: item.name, category: item.category, isVeg: item.isVeg,
-      price: item.price, description: item.description, imageUrl: item.imageUrl,
-      isAvailable: item.isAvailable, updatedAt: item.updatedAt.toISOString(),
-    });
+    res.status(201).json(formatItem(item));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -72,15 +112,24 @@ router.put("/admin/menu/:id", requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { name, category, isVeg, price, description, imageUrl, isAvailable } = req.body;
+
+    // Duplicate check — allow same item to keep its own name but block collision with another item
+    const dupeCheck = await db.select({ id: menuItemsTable.id })
+      .from(menuItemsTable)
+      .where(ilike(menuItemsTable.name, name.trim()))
+      .limit(1);
+
+    if (dupeCheck.length > 0 && dupeCheck[0].id !== id) {
+      res.status(409).json({ error: `Another item named "${name}" already exists.` });
+      return;
+    }
+
     const [item] = await db.update(menuItemsTable).set({
-      name, category, isVeg, price, description, imageUrl, isAvailable, updatedAt: new Date(),
+      name: name.trim(), category, isVeg, price, description,
+      imageUrl: imageUrl || null, isAvailable, updatedAt: new Date(),
     }).where(eq(menuItemsTable.id, id)).returning();
     if (!item) { res.status(404).json({ error: "Not found" }); return; }
-    res.json({
-      id: item.id, name: item.name, category: item.category, isVeg: item.isVeg,
-      price: item.price, description: item.description, imageUrl: item.imageUrl,
-      isAvailable: item.isAvailable, updatedAt: item.updatedAt.toISOString(),
-    });
+    res.json(formatItem(item));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Internal server error" });

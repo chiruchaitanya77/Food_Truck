@@ -42,17 +42,17 @@
   /* Shake Crazy Brand Colors - Warm, Vibrant, Energetic */
   --background: 45 100% 98%; /* Warm cream */
   --foreground: 0 0% 10%; /* Dark text */
-  
+
   --card: 0 0% 100%;
   --card-foreground: 0 0% 10%;
   --card-border: 45 30% 90%;
 
   --primary: 355 78% 55%; /* Vibrant Red #E63946 */
   --primary-foreground: 0 0% 100%;
-  
+
   --secondary: 44 100% 55%; /* Bold Yellow #FFCA3A */
   --secondary-foreground: 0 0% 10%;
-  
+
   --accent: 25 95% 53%; /* Vivid Orange */
   --accent-foreground: 0 0% 100%;
 
@@ -79,7 +79,7 @@
                       radial-gradient(circle at 0% 100%, hsla(355, 78%, 55%, 0.05) 0%, transparent 50%);
     background-attachment: fixed;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     letter-spacing: 0.05em;
@@ -96,4 +96,32 @@
 }
 .tilt-card-content {
   transform: translateZ(30px);
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-150%);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+@keyframes cameraClick {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 200, 0, 0.8);
+  }
+  50% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 12px rgba(255, 200, 0, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 200, 0, 0);
+  }
+}
+
+.animate-click {
+  animation: cameraClick 0.3s ease;
 }

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, stopwatchWinnersTable, stopwatchAttemptsTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { requireAuth } from "../lib/auth.js";
+import {getRealIp, resolveLocation} from "../lib/geoip.js";
 
 const router = Router();
 
@@ -14,7 +15,7 @@ function getTodayDate() {
 
 router.get("/stopwatch/can-play", async (req, res) => {
   try {
-    const ip = (req.query.ip as string) || req.ip || "unknown";
+    const ip = getRealIp(req);
     const today = getTodayDate();
     const existing = await db.select().from(stopwatchAttemptsTable)
       .where(and(eq(stopwatchAttemptsTable.ipAddress, ip), eq(stopwatchAttemptsTable.attemptDate, today)))
@@ -32,8 +33,8 @@ router.get("/stopwatch/can-play", async (req, res) => {
 
 router.post("/stopwatch/attempt", async (req, res) => {
   try {
-    const { userName, timeStopped } = req.body;
-    const ip = req.ip || "unknown";
+    const { userName, timeStopped, latitude, longitude } = req.body;
+    const ip = getRealIp(req);
     const today = getTodayDate();
 
     const existing = await db.select().from(stopwatchAttemptsTable)
@@ -56,11 +57,18 @@ router.post("/stopwatch/attempt", async (req, res) => {
     const isWinner = diff <= WIN_TOLERANCE;
 
     if (isWinner) {
-      await db.insert(stopwatchWinnersTable).values({
-        userName: userName || "Anonymous",
-        timeStopped,
-        prize: "Free Treat of your choice!",
-        ipAddress: ip,
+      // Geolocate in background — don't block the response
+      resolveLocation(ip, latitude, longitude).then(geo => {
+        db.insert(stopwatchWinnersTable).values({
+          userName: userName || "Anonymous",
+          timeStopped,
+          prize: "Free Treat of your choice!",
+          ipAddress: ip,
+          city: geo.city,
+          country: geo.country,
+          latitude: typeof latitude === "number" ? latitude : null,
+          longitude: typeof longitude === "number" ? longitude : null,
+        }).catch(console.error);
       });
     }
 
@@ -75,9 +83,9 @@ router.post("/stopwatch/attempt", async (req, res) => {
   }
 });
 
-router.get("/stopwatch/winners", async (req, res) => {
+router.get("/stopwatch/winners", async (_req, res) => {
   try {
-    const limit = parseInt(req.query.limit as string) || 10;
+    const limit = 10;
     const winners = await db.select().from(stopwatchWinnersTable)
       .orderBy(desc(stopwatchWinnersTable.createdAt))
       .limit(limit);
@@ -86,6 +94,8 @@ router.get("/stopwatch/winners", async (req, res) => {
       userName: w.userName,
       timeStopped: w.timeStopped,
       prize: w.prize,
+      city: w.city,
+      country: w.country,
       createdAt: w.createdAt.toISOString(),
     })));
   } catch (e) {
@@ -103,6 +113,9 @@ router.get("/admin/winners", requireAuth, async (_req, res) => {
       userName: w.userName,
       timeStopped: w.timeStopped,
       prize: w.prize,
+      ipAddress: w.ipAddress,
+      city: w.city,
+      country: w.country,
       createdAt: w.createdAt.toISOString(),
     })));
   } catch (e) {

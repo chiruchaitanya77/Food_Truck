@@ -1909,6 +1909,20 @@ export const adminApproveSubmission = async (
   });
 };
 
+export const getAdminDeleteSubmissionUrl = (id: number) => {
+  return `/api/admin/submissions/${id}`;
+};
+
+export const adminDeleteSubmission = async (
+    id: number,
+    options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(getAdminDeleteSubmissionUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
 export const getAdminApproveSubmissionMutationOptions = <
   TError = ErrorType<unknown>,
   TContext = unknown,
@@ -1947,6 +1961,44 @@ export const getAdminApproveSubmissionMutationOptions = <
   return { mutationFn, ...mutationOptions };
 };
 
+export const getAdminDeleteSubmissionMutationOptions = <
+    TError = ErrorType<unknown>,
+    TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminDeleteSubmission>>,
+      TError,
+      { id: number },
+      TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+    Awaited<ReturnType<typeof adminDeleteSubmission>>,
+    TError,
+    { id: number },
+    TContext
+> => {
+  const mutationKey = ["adminDeleteSubmission"];
+
+  const { mutation: mutationOptions, request: requestOptions } = options
+      ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+          ? options
+          : { ...options, mutation: { ...options.mutation, mutationKey } }
+      : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+      Awaited<ReturnType<typeof adminDeleteSubmission>>,
+      { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+    return adminDeleteSubmission(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
 export type AdminApproveSubmissionMutationResult = NonNullable<
   Awaited<ReturnType<typeof adminApproveSubmission>>
 >;
@@ -1975,6 +2027,26 @@ export const useAdminApproveSubmission = <
   TContext
 > => {
   return useMutation(getAdminApproveSubmissionMutationOptions(options));
+};
+
+export const useAdminDeleteSubmission = <
+    TError = ErrorType<unknown>,
+    TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminDeleteSubmission>>,
+      TError,
+      { id: number },
+      TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+    Awaited<ReturnType<typeof adminDeleteSubmission>>,
+    TError,
+    { id: number },
+    TContext
+> => {
+  return useMutation(getAdminDeleteSubmissionMutationOptions(options));
 };
 
 /**

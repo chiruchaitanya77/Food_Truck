@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, userSubmissionsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth } from "../lib/auth.js";
+import {getRealIp, resolveLocation} from "../lib/geoip.js";
 
 const router = Router();
 
@@ -13,6 +14,9 @@ function formatSubmission(s: typeof userSubmissionsTable.$inferSelect) {
     experienceText: s.experienceText,
     approved: s.approved,
     location: s.location ?? null,
+    city: s.city ?? null,
+    country: s.country ?? null,
+    ipAddress: s.ipAddress ?? null,
     createdAt: s.createdAt.toISOString(),
   };
 }
@@ -31,14 +35,29 @@ router.get("/submissions", async (_req, res) => {
 
 router.post("/submissions", async (req, res) => {
   try {
-    const { userName, imageUrl, experienceText, location } = req.body;
+    const { userName, imageUrl, experienceText, location, latitude, longitude } = req.body;
     if (!userName || !experienceText) {
       res.status(400).json({ error: "userName and experienceText are required" });
       return;
     }
-    const ip = req.ip || "unknown";
+    const ip = getRealIp(req);
+
+    // Geolocate IP
+    const geo = await   resolveLocation(ip, latitude, longitude);
+
+    const locationStr = location || [geo.city, geo.country].filter(Boolean).join(", ") || null;
+
     const [s] = await db.insert(userSubmissionsTable).values({
-      userName, imageUrl, experienceText, location, ipAddress: ip, approved: false,
+      userName,
+      imageUrl: imageUrl || null,
+      experienceText,
+      location: locationStr,
+      city: geo.city,
+      country: geo.country,
+      latitude: typeof latitude === "number" ? latitude : null,
+      longitude: typeof longitude === "number" ? longitude : null,
+      ipAddress: ip,
+      approved: false,
     }).returning();
     res.status(201).json(formatSubmission(s));
   } catch (e) {
@@ -66,6 +85,26 @@ router.put("/admin/submissions/:id/approve", requireAuth, async (req, res) => {
       .where(eq(userSubmissionsTable.id, id)).returning();
     if (!s) { res.status(404).json({ error: "Not found" }); return; }
     res.json(formatSubmission(s));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/admin/submissions/:id", requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    const [deleted] = await db
+        .delete(userSubmissionsTable)
+        .where(eq(userSubmissionsTable.id, id))
+        .returning();
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Not found" });
+    }
+
+    res.json({ message: "Submission deleted successfully" });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Internal server error" });

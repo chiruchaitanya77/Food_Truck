@@ -1,4 +1,4 @@
-import { useGetApprovedSubmissions, useCreateSubmission } from "@workspace/api-client-react";
+import { useGetApprovedSubmissions } from "@workspace/api-client-react";
 import { Camera, Heart, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,6 +10,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { requestGeoLocation } from "@/hooks/useGeoLocation";
+import { getApiUrl } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 const submissionSchema = z.object({
   userName: z.string().min(2, "Name must be at least 2 characters"),
@@ -20,9 +23,10 @@ const submissionSchema = z.object({
 
 export function GallerySection() {
   const { data: submissions } = useGetApprovedSubmissions();
-  const createSub = useCreateSubmission();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof submissionSchema>>({
     resolver: zodResolver(submissionSchema),
@@ -30,13 +34,33 @@ export function GallerySection() {
   });
 
   const onSubmit = async (values: z.infer<typeof submissionSchema>) => {
+    setSubmitting(true);
     try {
-      await createSub.mutateAsync({ data: values });
+      const geo = await Promise.race([
+        requestGeoLocation(),
+        new Promise<null>(res => setTimeout(() => res(null), 3000)),
+      ]);
+
+      const res = await fetch(getApiUrl("/api/submissions"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...values,
+          latitude: geo?.latitude ?? null,
+          longitude: geo?.longitude ?? null,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to submit");
+
       toast({ title: "Submitted!", description: "Thanks for sharing! We'll review it soon." });
+      queryClient.invalidateQueries({ queryKey: ["/api/submissions"] });
       setOpen(false);
       form.reset();
     } catch {
       toast({ title: "Error", description: "Failed to submit. Try again.", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -95,8 +119,8 @@ export function GallerySection() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" disabled={createSub.isPending} className="w-full h-14 text-lg rounded-xl shadow-lg bg-primary hover:bg-primary/90">
-                    {createSub.isPending ? "Submitting..." : "Submit to Gallery"}
+                  <Button type="submit" disabled={submitting} className="w-full h-14 text-lg rounded-xl shadow-lg bg-primary hover:bg-primary/90">
+                    {submitting ? "Submitting..." : "Submit to Gallery"}
                   </Button>
                 </form>
               </Form>
