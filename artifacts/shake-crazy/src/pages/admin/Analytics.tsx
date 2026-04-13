@@ -166,7 +166,12 @@ export default function Analytics() {
 
       {/* Recent Visits table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <h2 className="text-lg font-bold text-gray-800 mb-5">Recent Visitor Log</h2>
+        <h2 className="text-lg font-bold text-gray-800 mb-5 flex items-center justify-between gap-2">
+          Recent Visitor Log
+          <span className="text-md font-medium text-gray-500">
+            ({data?.recentVisits?.length || 0} visitors)
+          </span>
+        </h2>
         {isLoading ? <Skeleton className="h-40 rounded-xl" /> : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

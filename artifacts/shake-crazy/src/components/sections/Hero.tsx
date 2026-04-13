@@ -2,8 +2,11 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+type HeroProps = {
+  hasDiscount: boolean;
+};
 
-export function Hero() {
+export function Hero({ hasDiscount }: HeroProps) {
   const compRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,7 +42,7 @@ export function Hero() {
   return (
     <section
       ref={compRef}
-      className="relative min-h-screen flex items-center overflow-hidden"
+      className={`relative flex items-center overflow-hidden  ${hasDiscount ? "min-h-[85vh]" : "min-h-screen"}`}
     >
       {/* Dynamic Background Pattern */}
       <div

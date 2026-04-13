@@ -1,16 +1,18 @@
 import { Router } from "express";
 import multer from "multer";
 import path from "path";
-import { fileURLToPath } from "url";
+// import { fileURLToPath } from "url";
 import fs from "fs";
 import { db } from "@workspace/db";
 import { menuItemsTable } from "@workspace/db";
 import { eq, ilike } from "drizzle-orm";
 import { requireAuth } from "../lib/auth.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadsDir = path.join(__dirname, "..", "..", "uploads");
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+const __dirname = path.resolve();
+// const uploadsDir = path.join(__dirname, "..", "..", "uploads");
+const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 const storage = multer.diskStorage({

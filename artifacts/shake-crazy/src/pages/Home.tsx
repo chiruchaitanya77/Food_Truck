@@ -17,24 +17,6 @@ export default function Home() {
   const { data: discounts } = useGetActiveDiscounts();
     const trackVisitMutation = useTrackVisit();
 
-  // useEffect(() => {
-  //   Promise.race([
-  //     requestGeoLocation(),
-  //     new Promise<null>((res) => setTimeout(() => res(null), 2500)),
-  //   ]).then((geo) => {
-  //     fetch(getApiUrl("/api/analytics/track"), {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         page: "/",
-  //         userAgent: navigator.userAgent,
-  //         latitude: geo?.latitude ?? null,
-  //         longitude: geo?.longitude ?? null,
-  //       }),
-  //     }).catch(() => {});
-  //   });
-  // }, []);
-
     useEffect(() => {
         Promise.race([
             requestGeoLocation(),
@@ -64,7 +46,8 @@ export default function Home() {
         )}
 
         <main className="flex-grow">
-          <Hero />
+          {/*<Hero />*/}
+            <Hero hasDiscount={!!(discounts && discounts.length > 0)} />
           <MenuSection />
           <StopwatchSection />
           <LocationSection />
