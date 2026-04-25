@@ -120,7 +120,7 @@ export default function MenuPage() {
             </div>
           ) : displayedItems.length === 0 ? (
             <div className="text-center py-24">
-              <p className="text-6xl mb-4">🍽️</p>
+              <p className="text-8xl mb-4">🍽️</p>
               <p className="text-2xl font-bold text-foreground mb-2">No items found</p>
               <p className="text-muted-foreground font-medium">Try changing your filters</p>
             </div>
